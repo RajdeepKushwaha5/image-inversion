@@ -3,33 +3,67 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Color Inversion</title>
+    <title>Image Scanner & Inversion</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        #video {
+            border: 2px solid #ddd;
+            margin-bottom: 10px;
+        }
+        #canvas {
+            display: none;
+            margin-top: 10px;
+            border: 2px solid #ddd;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+    </style>
 </head>
 <body>
-    <h1>Image Color Inversion Tool</h1>
-    <input type="file" accept="image/*" onchange="invertColors(this)">
-    <canvas id="canvas"></canvas>
+    <h1>Scan Image & Invert Colors</h1>
+    <video id="video" width="320" height="240" autoplay></video>
+    <br>
+    <button id="snap">Take Snapshot</button>
+    <canvas id="canvas" width="320" height="240"></canvas>
 
     <script>
-        function invertColors(input) {
-            const canvas = document.getElementById('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = new Image();
-            img.onload = () => {
-                canvas.width = img.width;
-                canvas.height = img.height;
-                ctx.drawImage(img, 0, 0);
-                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-                const data = imageData.data;
-                for (let i = 0; i < data.length; i += 4) {
-                    data[i] = 255 - data[i];       // Red
-                    data[i + 1] = 255 - data[i + 1]; // Green
-                    data[i + 2] = 255 - data[i + 2]; // Blue
-                }
-                ctx.putImageData(imageData, 0, 0);
-            };
-            img.src = URL.createObjectURL(input.files[0]);
-        }
+        // Access the user's camera
+        const video = document.getElementById('video');
+        navigator.mediaDevices.getUserMedia({ video: true })
+            .then(stream => {
+                video.srcObject = stream;
+            })
+            .catch(err => {
+                console.error("Error accessing the camera: ", err);
+            });
+
+        // Take a snapshot and invert colors
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+        document.getElementById('snap').addEventListener('click', () => {
+            // Draw the video frame onto the canvas
+            context.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            // Get the image data and invert the colors
+            const imageData = context.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                data[i] = 255 - data[i];       // Red
+                data[i + 1] = 255 - data[i + 1]; // Green
+                data[i + 2] = 255 - data[i + 2]; // Blue
+            }
+            context.putImageData(imageData, 0, 0);
+
+            // Display the canvas
+            canvas.style.display = 'block';
+        });
     </script>
 </body>
 </html>
